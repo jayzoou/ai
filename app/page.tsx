@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 export default function Home() {
   const [result, setResult] = useState<string>('');
@@ -30,7 +30,7 @@ export default function Home() {
     }
   }, [messages]);
 
-  async function callOpenAI(messagesParam?: Array<{ role: string; content: string }>) {
+  const callOpenAI = useCallback(async (messagesParam?: Array<{ role: string; content: string }>) => {
     setLoading(true);
     setError(null);
     try {
@@ -54,9 +54,9 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [model]);
 
-  async function submitPrompt() {
+  const submitPrompt = useCallback(async () => {
     if (!prompt.trim()) return;
     const userMsg = { role: 'user', content: prompt };
     setMessages((s) => [...s, userMsg]);
@@ -68,7 +68,7 @@ export default function Home() {
       const assistantMsg = { role: 'assistant', content: reply };
       setMessages((s) => [...s, assistantMsg]);
     }
-  }
+  }, [prompt, messages, callOpenAI]);
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
@@ -81,7 +81,7 @@ export default function Home() {
             className="w-full max-w-3xl max-h-[calc(100vh-20rem)] overflow-y-auto px-4 py-2 space-y-4 hide-scrollbar pb-[calc(6rem)] md:pb-[calc(7rem+20px)]"
           >
             {messages.length === 0 && (
-              <div className="text-zinc-500 text-sm text-center">对话将在此显示</div>
+              <div className="text-zinc-600 dark:text-zinc-300 text-sm text-center">对话将在此显示</div>
             )}
 
             {messages.map((m, idx) => (
@@ -126,6 +126,7 @@ export default function Home() {
                     className="flex items-center gap-2 bg-zinc-900/95 text-white rounded-md px-3 py-1 text-sm shadow-lg"
                     aria-haspopup="listbox"
                     aria-expanded={modelOpen}
+                    aria-label="选择模型"
                   >
                     <span>{model}</span>
                     <span className="text-xs">▾</span>
